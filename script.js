@@ -1,10 +1,29 @@
 /* Gameboard */
 const gameBoard= (() => {
-    let board = ["","X","","","","O","","",""];
+    let board = ["","","","","","","","",""];
     const displayBoard = document.querySelectorAll('.block');
     const win = [
         [0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]
     ];
+
+    function eventListener(){
+        displayBoard.forEach((cell) => {
+            cell.addEventListener('click', () => {
+                fill(cell);
+            });
+        });
+    }
+
+    function fill(cell){
+        const cellID = cell.id;
+       
+        if(board[cellID] === ""){
+            board[cellID] = game.getWeapon();
+            displayBoard[cellID].removeEventListener('click', fill);
+            checkgame();
+        }
+        render();
+    }
 
     function render(){
         console.log("init");
@@ -13,12 +32,17 @@ const gameBoard= (() => {
         }
     }
 
-    return {render};
+    function checkgame(){
+        game.changePlayer();
+    }
+
+    return {render, eventListener};
 })();
 /* Players */
 
-const player = (name) => {
-    return {name};
+const player = (name, weapon) => {
+    const active = false;
+    return {name, weapon, active};
 }
 
 /* Flow of the Game */
@@ -36,6 +60,7 @@ const game = (() => {
         this.player1Name = document.querySelector('#player1-details');
         this.player2Name = document.querySelector('#player2-details');
         this.restart = document.querySelector('#restart');
+        this.form = document.querySelector('#playerchoose');
     }
     
     function setPlayerName(){
@@ -56,10 +81,21 @@ const game = (() => {
     function startGame(){
         setPlayerName();
         gameBoard.render();
-        console.log("oui");
+        gameBoard.eventListener();
+        form.style.visibility = 'hidden';
+        player1.active = true;
     }
 
-    return {init, startGame};
+    function getWeapon(){
+        return (player1.active) ? player1.weapon : player2.weapon;
+    }
+
+    function changePlayer(){
+        player1.active = (player1.active) ? false : true;
+        player2.active = (player2.active) ? false : true;
+    }
+
+    return {init, startGame, getWeapon, changePlayer};
 })();
 
 game.init();
