@@ -7,22 +7,19 @@ const gameBoard= (() => {
     ];
 
     function eventListener(){
-        displayBoard.forEach((cell) => {
-            cell.addEventListener('click', () => {
-                fill(cell);
-            });
+        displayBoard.forEach(function(element) {
+            element.addEventListener("click", fill);
         });
     }
 
     function fill(cell){
-        const cellID = cell.id;
-       
-        if(board[cellID] === ""){
-            board[cellID] = game.getWeapon();
-            displayBoard[cellID].removeEventListener('click', fill);
-            checkgame();
-        }
+
+        if (cell.type === "click"){
+            board[cell.target.id] = game.getWeapon();
+            displayBoard[cell.target.id].removeEventListener("click", fill);
+        } 
         render();
+        checkgame();
     }
 
     function render(){
@@ -33,10 +30,43 @@ const gameBoard= (() => {
     }
 
     function checkgame(){
-        game.changePlayer();
+        if (checkWin()){
+            game.endGame(game.getWeapon());
+        } else if(board.every(full)){
+            game.endGame("T");
+        } else {
+            game.changePlayer();
+        }  
     }
 
-    return {render, eventListener};
+    function full(boardElement){
+        return boardElement !== "";
+    }
+
+    function testResult(sub){
+        return board[sub] === game.getWeapon();
+    }
+
+    function testArray(subArray){
+        return (subArray.every(testResult));
+    }
+
+    function checkWin() {
+        return (win.some(testArray));
+    }
+
+    function removeListener(){
+        displayBoard.forEach(function(element) {
+            element.removeEventListener("click", fill);
+        })
+    }
+
+    function resetBoard(){
+        board.fill("");
+    }
+
+
+    return {render, eventListener,removeListener, resetBoard};
 })();
 /* Players */
 
@@ -47,6 +77,7 @@ const player = (name, weapon) => {
 
 /* Flow of the Game */
 const game = (() => {
+    let gameRunning = false;
     const player1 = player("Player 1","X");
     const player2 = player("Player 2","O");
 
@@ -61,6 +92,7 @@ const game = (() => {
         this.player2Name = document.querySelector('#player2-details');
         this.restart = document.querySelector('#restart');
         this.form = document.querySelector('#playerchoose');
+        this.announceWinner = document.querySelector("#announce-winner");
     }
     
     function setPlayerName(){
@@ -70,16 +102,16 @@ const game = (() => {
 
     function eventListener() {
         startBtn.addEventListener('click', startGame);
-        restart.addEventListener('click', reload);
-        
-    }
-
-    function reload(){
-        location.reload();
+        restart.addEventListener('click', function() {
+            form.style.visibility = 'visible';
+            if(gameRunning) endGame("C");
+        });
     }
 
     function startGame(){
+        gameRunning = true;
         setPlayerName();
+        announceWinner.textContent = "";
         gameBoard.render();
         gameBoard.eventListener();
         form.style.visibility = 'hidden';
@@ -95,7 +127,17 @@ const game = (() => {
         player2.active = (player2.active) ? false : true;
     }
 
-    return {init, startGame, getWeapon, changePlayer};
+    function endGame(winCode){
+        announceWinner.textContent = (winCode === "T") ? "It's a tie!":
+            (winCode === "X") ? '' + player1.name + " won":
+            (winCode === "O") ? '' + player2.name + " won":
+            (winCode === "C") ? "Game was cancelled!": "Something wrong happened";
+            gameBoard.resetBoard();
+            gameBoard.removeListener();
+            gameRunning = false;
+        }
+
+    return {init, startGame, getWeapon, changePlayer, endGame};
 })();
 
 game.init();
