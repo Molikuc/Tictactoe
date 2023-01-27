@@ -103,7 +103,7 @@ const game = (() => {
     function eventListener() {
         startBtn.addEventListener('click', startGame);
         restart.addEventListener('click', function() {
-            form.style.visibility = 'visible';
+            form.style.display = 'block';
             if(gameRunning) endGame("C");
         });
     }
@@ -114,7 +114,7 @@ const game = (() => {
         announceWinner.textContent = "";
         gameBoard.render();
         gameBoard.eventListener();
-        form.style.visibility = 'hidden';
+        form.style.display = 'none';
         player1.active = true;
     }
 
